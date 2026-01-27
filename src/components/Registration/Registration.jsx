@@ -3,6 +3,7 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { post, put } from "../../ApiWrapper/apiwrapper";
 import { toast } from "react-toastify";
+import { useNavigate } from 'react-router-dom'; 
 
 function Registerform({ onSuccess, existingFiler }) {
   const [form, setForm] = useState({
@@ -21,7 +22,7 @@ function Registerform({ onSuccess, existingFiler }) {
     thirdPartyDesigneePhone: "",
     thirdPartyDesigneePin: "",
   });
-
+const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [userId, setUserId] = useState("");
@@ -139,6 +140,64 @@ function Registerform({ onSuccess, existingFiler }) {
     } catch (error) {
       console.error(error);
       toast.error(existingFiler ? "Failed to update" : "Failed to save ");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+    const handleSaveAndFile = async () => {
+    if (!validate()) {
+      toast.warning("Please fill the required fields");
+      return;
+    }
+    setLoading(true);
+
+    const businessPhoneParsed = parsePhone(form.businessPhone);
+    const signingAuthorityPhoneParsed = parsePhone(form.signingAuthorityPhone);
+    const thirdPartyPhoneParsed = parsePhone(form.thirdPartyDesigneePhone);
+
+    const payload = {
+      userId: userId,
+      businessNameControl: form.businessNameControl || "SGCN",
+      businessNameLine1: form.businessNameLine1,
+      businessNameLine2: form.businessNameLine2 || "SGCN",
+      ein: form.ein,
+      inCareOfName: form.inCareOfName,
+      email: form.email,
+      phoneCountryCode: businessPhoneParsed.countryCode,
+      phoneNumber: businessPhoneParsed.number,
+      signingAuthorityName: form.signingAuthorityName,
+      signingAuthorityTitle: form.signingAuthorityTitle,
+      signingAuthorityPhoneCountryCode: signingAuthorityPhoneParsed.countryCode,
+      signingAuthorityPhone: signingAuthorityPhoneParsed.number,
+      hasThirdPartyDesignee: form.hasThirdPartyDesignee,
+      thirdPartyDesigneeName: form.thirdPartyDesigneeName,
+      thirdPartyDesigneePhoneCountryCode: thirdPartyPhoneParsed.countryCode,
+      thirdPartyDesigneePhone: thirdPartyPhoneParsed.number,
+      thirdPartyDesigneePin: form.thirdPartyDesigneePin,
+    };
+
+    try {
+      let savedFiler;
+      if (existingFiler) {
+        savedFiler = await put(`/api/v1/filers/${existingFiler.id}`, payload);
+        toast.success("Updated successfully");
+      } else {
+        savedFiler = await post("/api/v1/filers", payload);
+        toast.success("Registration successful");
+      }
+      const filerId = savedFiler?.data?.id || existingFiler?.id;
+      navigate('/filer', { 
+        state: { 
+          openModal: true, 
+          filerId: filerId,
+          businessName: form.businessNameLine1 
+        } 
+      });
+      if (onSuccess) onSuccess();
+    } catch (error) {
+      console.error(error);
+      toast.error(existingFiler ? "Failed to update" : "Failed to save");
     } finally {
       setLoading(false);
     }
@@ -356,17 +415,28 @@ function Registerform({ onSuccess, existingFiler }) {
     )}
   </div>
 
-  <div className="border-t border-gray-200 p-4 flex justify-end bg-white">
-    <button
-      onClick={handleRegisterSave}
-      disabled={loading}
-      className={`flex items-center gap-2 px-4 py-2 rounded-md bg-blue-700 text-white hover:bg-blue-600 transition shadow-sm ${
-        loading ? "opacity-50 cursor-not-allowed" : ""
-      }`}
-    >
-      {loading ? "Saving..." : existingFiler ? "Update" : "Save"}
-    </button>
-  </div>
+<div className="border-t border-gray-200 p-4 flex justify-end gap-2 bg-white">
+  <button
+    onClick={handleRegisterSave}
+    disabled={loading}
+    className={`flex items-center gap-2 px-4 py-2 rounded-md bg-[#2c7eea] text-white hover:bg-[#1f6fd6] transition shadow-sm ${
+      loading ? "opacity-50 cursor-not-allowed" : ""
+    }`}
+  >
+    {loading ? "Saving..." : existingFiler ? "Update" : "Save"}
+  </button>
+
+  <button
+    onClick={handleSaveAndFile}
+    disabled={loading}
+    className={`flex items-center gap-2 px-4 py-2 rounded-md bg-[#2c7eea] text-white hover:bg-[#1f6fd6] transition shadow-sm ${
+      loading ? "opacity-50 cursor-not-allowed" : ""
+    }`}
+  >
+    {loading ? "Saving..." : "Save and File"}
+  </button>
+</div>
+
 </div>
   );
 }

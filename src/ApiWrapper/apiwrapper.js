@@ -3,11 +3,15 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 console.log("api url>>>",API_BASE_URL);
+const userString = sessionStorage.getItem('user');
+const user = userString ? JSON.parse(userString) : null;
+const token = user?.token;
+console.log("login token", token);
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzZ0BnbWFpbC5jb20iLCJ1c2VySWQiOjcsIm5hbWUiOiJzdXJpeWEiLCJpYXQiOjE3Njk0MDEyOTcsImV4cCI6MTc2OTQ4NzY5N30.LBd-DEmWEfbB1vUjAocbOiE2L_bRfD-0R6DH6ESM1-w",
+    "Authorization": `Bearer ${token}`,
     'Content-Type': 'application/json',
   },
 });

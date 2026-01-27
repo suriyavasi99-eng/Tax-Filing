@@ -25,7 +25,6 @@ const Efilereturnlist = forwardRef(({ onEdit }, ref) => {
       const res = await get(`/api/v1/efile/returns?page=${pageNumber}&size=${size}`);
       setReturns(res?.data?.content || []);
       console.log("business date",res?.data?.content);
-      
       setTotalPages(res?.data?.totalPages || 0);
       setTotalElements(res?.data?.totalElements || 0);
     } catch (error) {
@@ -36,10 +35,14 @@ const Efilereturnlist = forwardRef(({ onEdit }, ref) => {
     }
   };
 
-  useImperativeHandle(ref, () => ({
-    refresh: () => fetchReturns(page)
+   useImperativeHandle(ref, () => ({
+    refresh: () => fetchReturns(page),
+    // Add this new method
+    openModalWithFiler: (filerId, businessName) => {
+      setSelectedReturn({ filerId, businessName });
+      setShowModal(true);
+    }
   }));
-
   useEffect(() => {
     fetchReturns(page);
   }, [page]);
@@ -86,7 +89,7 @@ const Efilereturnlist = forwardRef(({ onEdit }, ref) => {
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-              <FileText className="w-7 h-7 text-blue-600" />
+              {/* <FileText className="w-7 h-7 text-blue-600" />  */}
               File Returns Details
             </h2>
             <p className="text-sm text-gray-600 mt-1">
@@ -95,7 +98,7 @@ const Efilereturnlist = forwardRef(({ onEdit }, ref) => {
           </div>
           <button
             onClick={handleAddReturn}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-sm hover:shadow-md font-medium"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#2c7eea] text-white rounded-lg hover:bg-blue-700 transition-all shadow-sm hover:shadow-md font-medium"
           >
             <Plus size={18} />
             Add File
@@ -120,7 +123,7 @@ const Efilereturnlist = forwardRef(({ onEdit }, ref) => {
           <>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gradient-to-r from-blue-600 to-blue-700">
+                <thead className="bg-[#2c7eea]">
                   <tr>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
                       <div className="flex items-center gap-2">
@@ -186,7 +189,7 @@ const Efilereturnlist = forwardRef(({ onEdit }, ref) => {
   className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 transition-all hover:scale-105"
   title="View Dashboard"
 >
-  <File size={16} />
+  File
 </button>
 
                         </div>

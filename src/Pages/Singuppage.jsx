@@ -8,23 +8,14 @@ import Footer from "../components/Footer/Footer";
 function SignupPages() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header/>
+      <Header />
 
       {/* Main content area with proper spacing */}
       <div className="flex flex-1 mt-16">
-        {/* LEFT – SIGNUP */}
+
+        {/* LEFT – IMAGE */}
         <motion.div
           initial={{ x: -150, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="w-full md:w-1/2 flex items-center justify-center px-10 py-8"
-        >
-          <SignUp />
-        </motion.div>
-
-        {/* RIGHT – FULL HEIGHT GIF */}
-        <motion.div
-          initial={{ x: 150, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="hidden md:block md:w-1/2"
@@ -34,6 +25,17 @@ function SignupPages() {
             backgroundPosition: "center",
           }}
         />
+
+        {/* RIGHT – SIGNUP FORM */}
+        <motion.div
+          initial={{ x: 150, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="w-full md:w-1/2 flex items-center justify-center px-10 py-8"
+        >
+          <SignUp />
+        </motion.div>
+
       </div>
 
       <Footer />

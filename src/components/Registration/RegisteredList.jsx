@@ -150,7 +150,7 @@ function RegisteredList({ onEdit }) {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <Building2 className="w-7 h-7 text-blue-600" />
+                {/* <Building2 className="w-7 h-7 text-blue-600" /> */}
                Business Details
               </h2>
               <p className="text-sm text-gray-600 mt-1">
@@ -177,7 +177,8 @@ function RegisteredList({ onEdit }) {
           <div className="overflow-x-auto scrollbar-hide">
             <table className="min-w-full divide-y divide-gray-200">
               {/* Header */}
-              <thead className="bg-gradient-to-r from-blue-600 to-blue-700">
+             <thead className="bg-[#2c7eea]">
+
                 <tr>
                   <th className="px-4 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
                     <div className="flex items-center gap-2">
@@ -186,7 +187,8 @@ function RegisteredList({ onEdit }) {
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
                     <div className="flex items-center gap-2">
-                      <Building2 size={14} /> Business Name
+                      <Building2 size={14} />
+                       Business Name
                     </div>
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
@@ -194,11 +196,11 @@ function RegisteredList({ onEdit }) {
                       <Hash size={14} /> EIN
                     </div>
                   </th>
-                  <th className="px-4 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                  {/* <th className="px-4 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
                     <div className="flex items-center gap-2">
                       <User size={14} /> Contact
                     </div>
-                  </th>
+                  </th> */}
                   <th className="px-4 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
                     <div className="flex items-center gap-2">
                       <Mail size={14} /> Email
@@ -214,7 +216,7 @@ function RegisteredList({ onEdit }) {
                       <ShieldCheck size={14} /> Signing Authority
                     </div>
                   </th>
-                  <th className="px-4 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                  {/* <th className="px-4 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
                     <div className="flex items-center gap-2">
                       <Users size={14} /> Third Party
                     </div>
@@ -228,7 +230,7 @@ function RegisteredList({ onEdit }) {
                     <div className="flex items-center gap-2">
                       <Key size={14} /> TP PIN
                     </div>
-                  </th>
+                  </th> */}
                   <th className="px-4 py-4 text-center text-xs font-semibold text-white uppercase tracking-wider">
                     Actions
                   </th>
@@ -249,9 +251,9 @@ function RegisteredList({ onEdit }) {
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        {/* <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                           <Building2 className="w-4 h-4 text-blue-600" />
-                        </div>
+                        </div> */}
                         <div>
                           <div className="text-sm font-semibold text-gray-800">
                             {filer.businessNameLine1}
@@ -269,9 +271,9 @@ function RegisteredList({ onEdit }) {
                         {filer.ein}
                       </span>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                    {/* <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
                       {filer.inCareOfName}
-                    </td>
+                    </td> */}
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
                       {filer.email}
                     </td>
@@ -286,7 +288,7 @@ function RegisteredList({ onEdit }) {
                         {filer.signingAuthorityTitle}
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    {/* <td className="px-4 py-4 whitespace-nowrap">
                       {filer.hasThirdPartyDesignee ? (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
                           <CheckCircle size={14} /> Yes
@@ -310,7 +312,7 @@ function RegisteredList({ onEdit }) {
                       ) : (
                         <span className="text-gray-400">—</span>
                       )}
-                    </td>
+                    </td> */}
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="flex justify-center gap-2">
                         <button

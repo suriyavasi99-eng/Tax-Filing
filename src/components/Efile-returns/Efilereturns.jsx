@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { get, post, put } from "../../ApiWrapper/apiwrapper";
 import { toast } from "react-toastify";
+import { useNavigate } from 'react-router-dom'; 
 
 const getLastThreeYears = () => {
   const currentYear = new Date().getFullYear();
@@ -20,6 +21,7 @@ function EfileReturns({ returnData, onClose, onSuccess, filerId }) {
   const [filers, setFilers] = useState([]);
   const [loadingFilers, setLoadingFilers] = useState(true);
 const getNow = () => new Date().toISOString();
+ const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     id: "" || null,
@@ -41,7 +43,6 @@ const getNow = () => new Date().toISOString();
   { id: "DOC003", name: "Form W-2" }
 ];
 
-  // Fetch filers from RegisteredList API
   useEffect(() => {
     const fetchFilers = async () => {
       try {
@@ -58,13 +59,12 @@ const getNow = () => new Date().toISOString();
     fetchFilers();
   }, []);
 
-  // Populate form when editing
-  useEffect(() => {
+   useEffect(() => {
     if (returnData) {
       setFormData({
-        id: returnData.id,
-        filerId: returnData.filerId || "",
-        documentId: returnData.documentId || "",
+        id: returnData.id || null,
+        filerId: returnData.filerId || filerId || "",
+        documentId: returnData.documentId || "doc1",
         taxYr: returnData.taxYr || "",
         quarterEnding: returnData.quarterEnding || "03",
         finalReturn: returnData.finalReturn || false,
@@ -73,9 +73,8 @@ const getNow = () => new Date().toISOString();
         updatedAt: ""
       });
     }
-  }, [returnData]);
+  }, [returnData, filerId]);
 
-  // Set filerId if passed as prop
   useEffect(() => {
     if (filerId) {
       setFormData(prev => ({ ...prev, filerId }));
@@ -137,6 +136,47 @@ const validate = () => {
     setLoading(false);
   }
 };
+
+const handleFileAndTax = async () => {
+    if (!validate()) {
+      toast.error("Please fill all mandatory fields");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const now = getNow();
+      const payload = formData.id
+        ? {
+            ...formData,
+            updatedAt: now
+          }
+        : {
+            ...formData,
+            createdAt: now,
+            updatedAt: now
+          };
+      let savedReturn;
+      
+      if (formData.id) {
+        savedReturn = await put(`/api/v1/efile/returns/${formData.id}`, payload);
+        toast.success("E-File return updated successfully");
+      } else {
+        savedReturn = await post("/api/v1/efile/returns", payload);
+        toast.success("E-File return submitted successfully");
+      }
+      const returnId = savedReturn?.data?.id || formData.id;
+      navigate(`/dashboard/${returnId}`);
+      onSuccess?.();
+      onClose();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to submit E-File return");
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   return (
@@ -274,22 +314,27 @@ const validate = () => {
         </div>
 
         {/* Buttons */}
-        <div className="flex justify-end gap-3 pt-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium transition-colors"
-          >
-            Cancel
-          </button>
+        <div className="flex justify-between gap-3 pt-4">
+        
           <button
             type="button"
             onClick={handleSubmit}
             disabled={loading}
             className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? "Submitting..." : formData.id ? "Update" : "Submit"}
+            {loading ? "Submitting..." : formData.id ? "Update" : "Save"}
           </button>
+
+          <button
+          type="button"
+          onClick={handleFileAndTax}
+          disabled={loading}
+          className={`px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 font-medium transition-colors ${
+            loading ? "opacity-60 cursor-not-allowed" : ""
+          }`}
+        >
+          {loading ? "Filing..." : "File and Tax"}
+        </button>
         </div>
       </div>
     </div>

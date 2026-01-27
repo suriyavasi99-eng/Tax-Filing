@@ -39,6 +39,13 @@ function Header({ onFilerAdded }) {
       onFilerAdded();
     }
   };
+  const handleLogout = () => {
+  sessionStorage.removeItem("user"); // Clear the user from sessionStorage
+  setUserName("User"); // Reset username in UI
+  setOpen(false); // Close dropdown
+  navigate("/login"); // Redirect to login page
+};
+
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
@@ -47,9 +54,9 @@ function Header({ onFilerAdded }) {
           {/* Logo Section */}
           <div className="flex items-center">
             <button className="flex items-center gap-2 group">
-              <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+              {/* <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
                 <FileText className="w-5 h-5 text-white" />
-              </div>
+              </div> */}
               <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent hidden sm:block">
                 TaxFiler
               </span>
@@ -104,15 +111,13 @@ function Header({ onFilerAdded }) {
 
               {open && (
                 <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
-                  <Link to="/login">
-                    <button
-                      onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <LogIn className="w-4 h-4 text-gray-500" />
-                      Login
-                    </button>
-                  </Link>
+                 <button
+  onClick={handleLogout}
+  className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+>
+  <LogIn className="w-4 h-4 text-gray-500" />
+  Logout
+</button>
                   <Link to="/signup">
                     <button
                       onClick={() => setOpen(false)}
@@ -154,16 +159,17 @@ function Header({ onFilerAdded }) {
             </Link>
             {/* Show Register button only on /register path */}
             {isRegisterPage && (
-              <button
-                onClick={() => {
-                  setShowRegister(true);
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium text-sm"
-              >
-                <SquarePen className="w-4 h-4" />
-                Register
-              </button>
+            <button
+  onClick={() => {
+    setShowRegister(true);
+    setMobileMenuOpen(false);
+  }}
+  className="w-full flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2c7eea] text-white font-medium text-sm"
+>
+  <SquarePen className="w-4 h-4" />
+  Register
+</button>
+
             )}
           </div>
         )}

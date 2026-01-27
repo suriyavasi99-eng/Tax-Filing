@@ -55,11 +55,9 @@ function SignUp() {
       toast.warning("Please ensure all fields are valid");
       return;
     }
-
     try {
       setLoading(true);
       const res = await post("/auth/signup", form);
-
       if (res.status === 200 || res.data?.success) {
         toast.success("Signup successful! Please login.");
         navigate("/login");
