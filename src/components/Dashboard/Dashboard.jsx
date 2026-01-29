@@ -59,22 +59,39 @@ const Dashboard = () => {
         `/api/v1/irs720/communication-air/irs-item/${irsReturnId}/${item.irsItemId}?page=0&size=200`
       );
 
+      console.log("Fetched data from API:", res);
+
       const data = res?.data?.content || [];
+
+      console.log("Parsed content:", data);
 
       if (data.length === 0) {
         setEntries([createEmptyEntry()]);
       } else {
-        setEntries(
-          data.map((row) => ({
+        const mappedEntries = data.map((row) => {
+          // Determine checkbox state and date field based on methodType:
+          // "Regular" = checked (true) -> txnDate goes to collectedDate
+          // "Alternative" = unchecked (false) -> txnDate goes to billedDate
+          const isRegular = row.methodType === "Regular";
+          
+          return {
             id: row.id,
-            txnDate: row.txnDate,
-            amount: row.amount,
+            txnDate: row.txnDate || "",
+            amount: row.amount || "",
+            collectedDate: isRegular ? (row.txnDate || "") : "", // Show txnDate in collectedDate if Regular
+            billedDate: !isRegular ? (row.txnDate || "") : "", // Show txnDate in billedDate if Alternative
+            checked: isRegular, // true for Regular, false for Alternative
+            methodType: row.methodType || "",
             isNew: false,
-          }))
-        );
+          };
+        });
+
+        console.log("Mapped entries for table:", mappedEntries);
+        setEntries(mappedEntries);
       }
     } catch (err) {
       console.error("Failed to load item data", err);
+      toast.error("Failed to load data ❌");
       setEntries([]);
     } finally {
       setLoading(false);
@@ -85,24 +102,29 @@ const Dashboard = () => {
     id: `new_${Date.now()}`,
     txnDate: "",
     amount: "",
+    collectedDate: "",
+    billedDate: "",
+    checked: false, // Default unchecked
     isNew: true,
   });
 
   const addEntry = () => {
     setEntries([...entries, createEmptyEntry()]);
   };
-const getCurrentYearQuarter = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
-  const quarter = month <= 3 ? "03" : month <= 6 ? "06" : month <= 9 ? "09" : "12";
-  return `${year}-${quarter}`;
-};
 
-const isItemActive = (item) => {
-  const currentYearQuarter = getCurrentYearQuarter();
-  return item.toYearQuarter >= currentYearQuarter;
-};
+  const getCurrentYearQuarter = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const quarter = month <= 3 ? "03" : month <= 6 ? "06" : month <= 9 ? "09" : "12";
+    return `${year}-${quarter}`;
+  };
+
+  const isItemActive = (item) => {
+    const currentYearQuarter = getCurrentYearQuarter();
+    return item.toYearQuarter >= currentYearQuarter;
+  };
+
   const handleInputChange = (entryId, field, value) => {
     setEntries(
       entries.map((entry) =>
@@ -115,24 +137,28 @@ const isItemActive = (item) => {
     if (!activeItem) return;
 
     try {
-      const payloads = entries.map((entry) => ({
-        id: entry.isNew ? null : entry.id,
-        returnId: parseInt(irsReturnId) || 0,
-        irsItemId: activeItem.item.irsItemId,
-        methodType: "Direct",
-        amount: parseFloat(entry.amount) || 0,
-        txnDate: entry.txnDate,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }));
+      const payloads = entries.map((entry) => {
+        const isChecked = entry.checked || false;  
+        return {
+          id: entry.isNew ? null : entry.id,
+          returnId: parseInt(irsReturnId) || 0,
+          irsItemId: activeItem.item.irsItemId,
+          methodType: isChecked ? "Regular" : "Alternative",
+          amount: parseFloat(entry.amount) || 0,
+          txnDate: isChecked ? entry.collectedDate : entry.billedDate,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+      });
 
+      console.log("Saving payloads:", payloads);
       await post("/api/v1/irs720/communication-air/irs-item", payloads);
-      toast.success("All entries saved successfully ✅");
+      toast.success("All entries saved successfully");
 
       await selectItem(activeItem.category, activeItem.item);
     } catch (error) {
       console.error("Save failed", error);
-      toast.error("Failed to save entries ❌");
+      toast.error("Failed to save entries ");
     }
   };
 
@@ -142,10 +168,10 @@ const isItemActive = (item) => {
         await del(`/api/v1/irs720/communication-air/${entryId}`);
       }
       setEntries(entries.filter((entry) => entry.id !== entryId));
-      toast.success("Entry deleted successfully ✅");
+      toast.success("Entry deleted successfully ");
     } catch (err) {
       console.error("Failed to delete entry", err);
-      toast.error("Failed to delete entry ❌");
+      toast.error("Failed to delete entry ");
     }
   };
 
@@ -220,30 +246,30 @@ const isItemActive = (item) => {
                         {/* Items under this Category */}
                         {activeCategoryId === category.categoryId && (
                           <div className="ml-3 mt-1 space-y-1">
-                         {category.items.filter(isItemActive).length ? (
-  category.items.filter(isItemActive).map((item) => (
-    <button
-      key={item.irsItemId}
-      onClick={() => selectItem(category, item)}
-      className={`w-full text-left p-2 rounded text-sm transition ${
-        activeItem?.item?.irsItemId === item.irsItemId
-          ? "bg-blue-50 text-blue-700 font-medium"
-          : "hover:bg-gray-100 text-gray-700"
-      }`}
-    >
-      <div className="flex gap-2">
-        <span className="text-xs text-gray-400">
-          {item.irsNo}
-        </span>
-        <span>{item.itemName}</span>
-      </div>
-    </button>
-  ))
-) : (
-  <div className="text-xs text-gray-400 px-2 py-1">
-    No active items
-  </div>
-)}
+                            {category.items.filter(isItemActive).length ? (
+                              category.items.filter(isItemActive).map((item) => (
+                                <button
+                                  key={item.irsItemId}
+                                  onClick={() => selectItem(category, item)}
+                                  className={`w-full text-left p-2 rounded text-sm transition ${
+                                    activeItem?.item?.irsItemId === item.irsItemId
+                                      ? "bg-blue-50 text-blue-700 font-medium"
+                                      : "hover:bg-gray-100 text-gray-700"
+                                  }`}
+                                >
+                                  <div className="flex gap-2">
+                                    <span className="text-xs text-gray-400">
+                                      {item.irsNo}
+                                    </span>
+                                    <span>{item.itemName}</span>
+                                  </div>
+                                </button>
+                              ))
+                            ) : (
+                              <div className="text-xs text-gray-400 px-2 py-1">
+                                No active items
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -275,40 +301,31 @@ const isItemActive = (item) => {
                   </h2>
                 </div>
 
-                {/* Add Entry Button */}
-                {/* <button
-                  onClick={addEntry}
-                  className="mt-4 flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed rounded-md text-sm font-medium transition border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50"
-                >
-                  <Plus size={16} />
-                  Add Another Entry
-                </button> */}
-
-
                 {/* Tables */}
-                  <CommunicationsTable
-          entries={entries}
-          activeItem={activeItem}
-          onAddEntry={addEntry}
-          onInputChange={handleInputChange}
-          onDeleteEntry={handleDeleteEntry}
-          onSaveAll={handleSaveAll}
-          calculateTotalTax={calculateTotalTax}
-        />
+                <CommunicationsTable
+                  entries={entries}
+                  activeItem={activeItem}
+                  onAddEntry={addEntry}
+                  onInputChange={handleInputChange}
+                  onDeleteEntry={handleDeleteEntry}
+                  onSaveAll={handleSaveAll}
+                  calculateTotalTax={calculateTotalTax}
+                />
 
-       <Irs6627form53 
-  activeItem={activeItem}
-  irsReturnId={irsReturnId}
-/>
+                <Irs6627form53 
+                  activeItem={activeItem}
+                  irsReturnId={irsReturnId}
+                />
 
-<Irs6627Form16 
-  activeItem={activeItem}
-  irsReturnId={irsReturnId}
-/>
-<Irs6627form54 
-  activeItem={activeItem}
-  irsReturnId={irsReturnId}
-/>
+                <Irs6627Form16 
+                  activeItem={activeItem}
+                  irsReturnId={irsReturnId}
+                />
+
+                <Irs6627form54 
+                  activeItem={activeItem}
+                  irsReturnId={irsReturnId}
+                />
               </div>
             </div>
           ) : (

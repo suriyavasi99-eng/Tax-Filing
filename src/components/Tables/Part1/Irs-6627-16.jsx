@@ -2,12 +2,14 @@ import React, { useEffect, useState } from "react";
 import { Trash2, Save, Plus } from "lucide-react";
 import { post, get, del } from "../../../ApiWrapper/apiwrapper";
 import { toast } from "react-toastify";
+import { data } from "react-router-dom";
+
+const TAX_RATE = 0.18;
 
 function Irs6627Form16({ activeItem, irsReturnId }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Only show this table for IRS No. 16
   const shouldShowTable = activeItem?.item?.irsNo === "16";
 
   useEffect(() => {
@@ -16,49 +18,40 @@ function Irs6627Form16({ activeItem, irsReturnId }) {
     }
   }, [activeItem, shouldShowTable]);
 
-  const fetchEntries = async () => {
-    if (!activeItem?.item?.irsItemId) return;
-
-    setLoading(true);
-    try {
-      const res = await get(
-        `/api/v1/irs6627/part1/petroleum/bulk/${irsReturnId}/${activeItem.item.irsItemId}`
-      );
-
-      const data = res?.data || [];
-
-      if (data.length === 0) {
-        setEntries([createEmptyEntry()]);
-      } else {
-        setEntries(
-          data.map((row) => ({
-            id: row.part1Id || `existing_${row.irsItemId}_${row.transactionDate}`,
-            transactionDate: row.transactionDate || "",
-            crudeOilReceivedBbl: row.crudeOilReceivedBbl || "",
-            crudeOilPreTaxedBbl: row.crudeOilPreTaxedBbl || "",
-            crudeOilUsedBeforeTaxBbl: row.crudeOilUsedBeforeTaxBbl || "",
-            importedProductsBbl: row.importedProductsBbl || "",
-            taxAmount: row.taxAmount || 0,
-            isNew: false,
-          }))
-        );
-      }
-    } catch (err) {
-      console.error("Failed to load petroleum data", err);
+const fetchEntries = async () => {
+  if (!activeItem?.item?.irsItemId) return;
+  setLoading(true);
+  try {
+    const res = await get(
+      `/api/v1/irs6627/part1/petroleum/${irsReturnId}/${activeItem.item.irsItemId}?returnId=${irsReturnId}&page=0&size=20`
+    );
+    const data = res?.data?.content || [];
+    if (data.length === 0) {
       setEntries([createEmptyEntry()]);
-    } finally {
-      setLoading(false);
+    } else {
+      setEntries(
+        data.map((row) => ({
+          id: row.part1Id || `existing_${row.irsItemId}_${row.transactionDate}`,
+          transactionDate: row.transactionDate || "",
+          importedProductsBbl: row.importedProductsBbl || "",
+          taxAmount: row.taxAmount ? row.taxAmount.toFixed(2) : "0.00",
+          isNew: false,
+        }))
+      );
     }
-  };
+  } catch (err) {
+    console.error("Failed to load petroleum data", err);
+    setEntries([createEmptyEntry()]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const createEmptyEntry = () => ({
     id: `new_${Date.now()}`,
     transactionDate: "",
-    crudeOilReceivedBbl: "",
-    crudeOilPreTaxedBbl: "",
-    crudeOilUsedBeforeTaxBbl: "",
     importedProductsBbl: "",
-    taxAmount: 0,
+    taxAmount: "0.00",
     isNew: true,
   });
 
@@ -68,42 +61,71 @@ function Irs6627Form16({ activeItem, irsReturnId }) {
 
   const handleInputChange = (entryId, field, value) => {
     setEntries(
-      entries.map((entry) =>
-        entry.id === entryId ? { ...entry, [field]: value } : entry
-      )
+      entries.map((entry) => {
+        if (entry.id !== entryId) return entry;
+
+        const updatedEntry = { ...entry, [field]: value };
+
+        if (field === "importedProductsBbl") {
+          const bbl = parseFloat(value) || 0;
+          updatedEntry.taxAmount = (bbl * TAX_RATE).toFixed(2);
+        }
+
+        return updatedEntry;
+      })
     );
   };
 
-  const handleSaveAll = async () => {
-    if (!activeItem) return;
+const handleSaveAll = async () => {
+  if (!activeItem) return;
 
-    try {
-      const payloads = entries.map((entry) => ({
-        part1Id: entry.isNew ? null : entry.id,
-        returnId: parseInt(irsReturnId) || 0,
-        irsItemId: activeItem.item.irsItemId,
-        transactionDate: entry.transactionDate,
-        crudeOilReceivedBbl: parseFloat(entry.crudeOilReceivedBbl) || 0,
-        crudeOilPreTaxedBbl: parseFloat(entry.crudeOilPreTaxedBbl) || 0,
-        crudeOilUsedBeforeTaxBbl: parseFloat(entry.crudeOilUsedBeforeTaxBbl) || 0,
-        importedProductsBbl: parseFloat(entry.importedProductsBbl) || 0,
-        taxAmount: parseFloat(entry.taxAmount) || 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }));
+  try {
+    const newEntries = entries.filter(entry => entry.isNew);
+    const existingEntries = entries.filter(entry => !entry.isNew);
+    const createPayloads = newEntries.map((entry) => ({
+      part1Id: null,
+      returnId: parseInt(irsReturnId) || 0,
+      irsItemId: activeItem.item.irsItemId,
+      transactionDate: entry.transactionDate,
+      crudeOilReceivedBbl: 0,
+      crudeOilPreTaxedBbl: 0,
+      crudeOilUsedBeforeTaxBbl: 0,
+      importedProductsBbl: parseFloat(entry.importedProductsBbl) || 0,
+      taxAmount: parseFloat(entry.taxAmount) || 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }));
+    const updatePayloads = existingEntries.map((entry) => ({
+      part1Id: entry.id,
+      returnId: parseInt(irsReturnId) || 0,
+      irsItemId: activeItem.item.irsItemId,
+      transactionDate: entry.transactionDate,
+      crudeOilReceivedBbl: 0,
+      crudeOilPreTaxedBbl: 0,
+      crudeOilUsedBeforeTaxBbl: 0,
+      importedProductsBbl: parseFloat(entry.importedProductsBbl) || 0,
+      taxAmount: parseFloat(entry.taxAmount) || 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }));
 
+    // Combine both create and update payloads
+    const allPayloads = [...createPayloads, ...updatePayloads];
+
+    if (allPayloads.length > 0) {
       await post(
         `/api/v1/irs6627/part1/petroleum/bulk/${irsReturnId}/${activeItem.item.irsItemId}`,
-        payloads
+        allPayloads
       );
-      toast.success("All petroleum entries saved successfully ✅");
 
+      toast.success("All petroleum entries saved successfully ✅");
       await fetchEntries();
-    } catch (error) {
-      console.error("Save failed", error);
-      toast.error("Failed to save petroleum entries ❌");
     }
-  };
+  } catch (error) {
+    console.error("Save failed", error);
+    toast.error("Failed to save petroleum entries ❌");
+  }
+};
 
   const handleDeleteEntry = async (entryId) => {
     try {
@@ -124,9 +146,7 @@ function Irs6627Form16({ activeItem, irsReturnId }) {
       .toFixed(2);
   };
 
-  if (!shouldShowTable) {
-    return null;
-  }
+  if (!shouldShowTable) return null;
 
   if (loading) {
     return (
@@ -138,7 +158,6 @@ function Irs6627Form16({ activeItem, irsReturnId }) {
 
   return (
     <div className="p-5">
-      {/* Add Entry Button */}
       <button
         onClick={addEntry}
         className="mb-4 flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed rounded-md text-sm font-medium transition border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50"
@@ -147,28 +166,19 @@ function Irs6627Form16({ activeItem, irsReturnId }) {
         Add Another Entry
       </button>
 
-      {/* Table */}
       <div className="overflow-x-auto border rounded-lg shadow-sm bg-white">
         <table className="w-full border-collapse table-auto">
           <thead>
             <tr className="bg-gray-100 border-b-2 border-gray-300">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 w-16">
-                #
-              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 w-16">#</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 min-w-[150px]">
                 Transaction Date
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 min-w-[150px]">
-                Crude Oil Received (Bbl)
+                New Barrels (Bbl)
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 min-w-[150px]">
-                Crude Oil Pre-Taxed (Bbl)
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 min-w-[180px]">
-                Crude Oil Used Before Tax (Bbl)
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 min-w-[150px]">
-                Imported Products (Bbl)
+                Tax Rate
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 min-w-[120px]">
                 Tax Amount
@@ -178,115 +188,68 @@ function Irs6627Form16({ activeItem, irsReturnId }) {
               </th>
             </tr>
           </thead>
+
           <tbody>
             {entries.map((entry, index) => (
-              <tr
-                key={entry.id}
-                className="border-b transition hover:bg-gray-50"
-              >
+              <tr key={entry.id} className="border-b transition hover:bg-gray-50">
                 <td className="px-4 py-3 text-sm font-medium text-gray-600">
                   {index + 1}
                 </td>
+
                 <td className="px-4 py-3">
                   <input
                     type="date"
-                    value={entry.transactionDate || ""}
+                    value={entry.transactionDate}
                     onChange={(e) =>
-                      handleInputChange(
-                        entry.id,
-                        "transactionDate",
-                        e.target.value
-                      )
+                      handleInputChange(entry.id, "transactionDate", e.target.value)
                     }
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </td>
+
                 <td className="px-4 py-3">
                   <input
                     type="number"
                     placeholder="0"
-                    value={entry.crudeOilReceivedBbl || ""}
+                    value={entry.importedProductsBbl}
                     onChange={(e) =>
-                      handleInputChange(
-                        entry.id,
-                        "crudeOilReceivedBbl",
-                        e.target.value
-                      )
+                      handleInputChange(entry.id, "importedProductsBbl", e.target.value)
                     }
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </td>
-                <td className="px-4 py-3">
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={entry.crudeOilPreTaxedBbl || ""}
-                    onChange={(e) =>
-                      handleInputChange(
-                        entry.id,
-                        "crudeOilPreTaxedBbl",
-                        e.target.value
-                      )
-                    }
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
-                </td>
-                <td className="px-4 py-3">
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={entry.crudeOilUsedBeforeTaxBbl || ""}
-                    onChange={(e) =>
-                      handleInputChange(
-                        entry.id,
-                        "crudeOilUsedBeforeTaxBbl",
-                        e.target.value
-                      )
-                    }
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
-                </td>
-                <td className="px-4 py-3">
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={entry.importedProductsBbl || ""}
-                    onChange={(e) =>
-                      handleInputChange(
-                        entry.id,
-                        "importedProductsBbl",
-                        e.target.value
-                      )
-                    }
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
-                </td>
+
                 <td className="px-4 py-3">
                   <div className="relative">
-                    <span className="absolute left-3 top-2 text-gray-500 text-sm">
-                      $
-                    </span>
+                    <span className="absolute left-3 top-2 text-gray-500 text-sm">$</span>
                     <input
                       type="number"
-                      placeholder="0.00"
-                      value={entry.taxAmount || ""}
-                      onChange={(e) =>
-                        handleInputChange(entry.id, "taxAmount", e.target.value)
-                      }
+                      value={TAX_RATE}
+                      readOnly
                       className="w-full border border-gray-300 rounded pl-7 pr-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
                 </td>
+
                 <td className="px-4 py-3">
-                  <div className="flex items-center justify-center">
-                    <button
-                      onClick={() => handleDeleteEntry(entry.id)}
-                      className="p-2 rounded-full transition-all text-red-500 hover:text-red-700 hover:bg-red-50"
-                      title="Delete"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 text-gray-500 text-sm">$</span>
+                    <input
+                      type="number"
+                      readOnly
+                      value={entry.taxAmount}
+                      className="w-full border border-gray-300 rounded pl-7 pr-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
                   </div>
+                </td>
+
+                <td className="px-4 py-3 text-center">
+                  <button
+                    onClick={() => handleDeleteEntry(entry.id)}
+                    className="p-2 rounded-full transition-all text-red-500 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </td>
               </tr>
             ))}
@@ -295,7 +258,7 @@ function Irs6627Form16({ activeItem, irsReturnId }) {
           {entries.length > 0 && (
             <tfoot>
               <tr className="bg-gray-50 font-bold border-t-2">
-                <td colSpan="7" className="px-4 py-4 text-right text-gray-800">
+                <td colSpan="5" className="px-4 py-4 text-right text-gray-800">
                   Total Tax:
                   <span className="ml-3 text-xl font-bold text-green-600">
                     ${calculateTotalTax()}
