@@ -8,6 +8,7 @@ import CommunicationsTable from "../Tables/Part1/Communications-Air-Trans";
 import Irs6627form53 from "../Tables/Part1/Irs-6627-53";
 import Irs6627Form16 from "../Tables/Part1/Irs-6627-16";
 import Irs6627form54 from "../Tables/Part1/Irs-6627-54";
+import Irs6627form98 from "../Tables/Part1/Irs-6627-98";
 
 const Dashboard = () => {
   const { id: irsReturnId } = useParams();
@@ -69,18 +70,15 @@ const Dashboard = () => {
         setEntries([createEmptyEntry()]);
       } else {
         const mappedEntries = data.map((row) => {
-          // Determine checkbox state and date field based on methodType:
-          // "Regular" = checked (true) -> txnDate goes to collectedDate
-          // "Alternative" = unchecked (false) -> txnDate goes to billedDate
           const isRegular = row.methodType === "Regular";
           
           return {
             id: row.id,
             txnDate: row.txnDate || "",
             amount: row.amount || "",
-            collectedDate: isRegular ? (row.txnDate || "") : "", // Show txnDate in collectedDate if Regular
-            billedDate: !isRegular ? (row.txnDate || "") : "", // Show txnDate in billedDate if Alternative
-            checked: isRegular, // true for Regular, false for Alternative
+            collectedDate: isRegular ? (row.txnDate || "") : "",
+            billedDate: !isRegular ? (row.txnDate || "") : "", 
+            checked: isRegular,
             methodType: row.methodType || "",
             isNew: false,
           };
@@ -289,15 +287,14 @@ const Dashboard = () => {
                 {/* Header */}
                 <div className="p-5 border-b bg-gradient-to-r from-gray-50 to-white">
                   <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                    <span className="px-2 py-0.5 bg-gray-100 rounded font-mono">
-                      {activeItem.item.irsNo}
-                    </span>
-                    <span>•</span>
                     <span>{activeItem.category.categoryName}</span>
                   </div>
 
                   <h2 className="font-bold text-gray-800">
-                    {activeItem.item.itemName}
+                      {activeItem.item.itemName}
+                    <span className="px-2 py-0.5 bg-gray-100 rounded font-mono">
+                      {activeItem.item.irsNo}
+                    </span>  
                   </h2>
                 </div>
 
@@ -326,6 +323,10 @@ const Dashboard = () => {
                   activeItem={activeItem}
                   irsReturnId={irsReturnId}
                 />
+
+                <Irs6627form98
+                 activeItem={activeItem}
+                  irsReturnId={irsReturnId}/>
               </div>
             </div>
           ) : (

@@ -17,16 +17,32 @@ function CommunicationsTable({
     return null;
   }
 
+  // Determine master checkbox state based on all entries
+  const allChecked = entries.length > 0 && entries.every(entry => entry.checked);
+  const someChecked = entries.some(entry => entry.checked) && !allChecked;
+
+  // Handle master checkbox toggle - applies to all rows
+  const handleMasterCheckboxChange = (checked) => {
+    entries.forEach(entry => {
+      onInputChange(entry.id, "checked", checked);
+    });
+  };
+
   return (
     <div className="p-5">
-      {/* Add Entry Button */}
-      <button
-        onClick={onAddEntry}
-        className="mb-4 flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed rounded-md text-sm font-medium transition border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50"
-      >
-        <Plus size={16} />
-        Add Another Entry
-      </button>
+      <div className="mb-4 flex items-center justify-end gap-4">
+       
+
+        {/* Master Checkbox with Label */}
+        <div className="flex items-center gap-3 p-3 rounded-lg">
+          <input 
+            type="checkbox"
+            checked={allChecked}
+            onChange={(e) => handleMasterCheckboxChange(e.target.checked)}
+            className="h-5 w-5 accent-blue-600 cursor-pointer"
+          />
+        </div>
+      </div>
 
       {/* Table */}
       <div className="overflow-x-auto border rounded-lg shadow-sm bg-white">
@@ -35,11 +51,6 @@ function CommunicationsTable({
             <tr className="bg-gray-100 border-b-2 border-gray-300">
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 w-16">
                 #
-              </th>
-
-              {/* ✅ Checkbox column */}
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 w-20">
-                Type
               </th>
 
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 min-w-[200px]">
@@ -62,9 +73,6 @@ function CommunicationsTable({
 
           <tbody>
             {entries.map((entry, index) => {
-              // Checkbox logic:
-              // false (unchecked) = collectedDate is read-only, billedDate is editable
-              // true (checked) = collectedDate is editable, billedDate is disabled
               const isChecked = entry.checked || false;
 
               return (
@@ -76,19 +84,7 @@ function CommunicationsTable({
                     {index + 1}
                   </td>
 
-                  {/* ✅ Checkbox cell */}
-                  <td className="px-4 py-3 text-center">
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      onChange={(e) =>
-                        onInputChange(entry.id, "checked", e.target.checked)
-                      }
-                      className="h-4 w-4 accent-blue-600 cursor-pointer"
-                    />
-                  </td>
-
-                  {/* Collected Date - Read-only when unchecked, Editable when checked */}
+                  {/* Collected Date - Read-only when unchecked (Alternative), Editable when checked (Regular) */}
                   <td className="px-4 py-3">
                     <input
                       type="date"
@@ -103,7 +99,7 @@ function CommunicationsTable({
                     />
                   </td>
 
-                  {/* Billed Date - Editable when unchecked, Disabled when checked */}
+                  {/* Billed Date - Editable when unchecked (Alternative), Disabled when checked (Regular) */}
                   <td className="px-4 py-3">
                     <input
                       type="date"
@@ -161,13 +157,25 @@ function CommunicationsTable({
                   </span>
                 </td>
                 <td className="px-4 py-4 text-center">
-                  <button
+                  <div className="flex items-center justify-center gap-3">
+ {/* Add Entry Button */}
+        <button
+          onClick={onAddEntry}
+          className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed rounded-md text-sm font-medium transition border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50"
+        >
+          <Plus size={16} />
+          Add
+        </button>
+
+         <button
                     onClick={onSaveAll}
                     className="inline-flex items-center gap-2 px-6 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-all shadow-md active:scale-95"
                   >
                     <Save size={18} />
                     Save
                   </button>
+                  </div>
+                 
                 </td>
               </tr>
             </tfoot>

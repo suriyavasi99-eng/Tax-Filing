@@ -118,12 +118,12 @@ const handleSaveAll = async () => {
         allPayloads
       );
 
-      toast.success("All petroleum entries saved successfully ✅");
+      toast.success("All petroleum entries saved successfully");
       await fetchEntries();
     }
   } catch (error) {
     console.error("Save failed", error);
-    toast.error("Failed to save petroleum entries ❌");
+    toast.error("Failed to save petroleum entries");
   }
 };
 
@@ -133,10 +133,10 @@ const handleSaveAll = async () => {
         await del(`/api/v1/irs6627/part1/petroleum/${entryId}`);
       }
       setEntries(entries.filter((entry) => entry.id !== entryId));
-      toast.success("Entry deleted successfully ✅");
+      toast.success("Entry deleted successfully");
     } catch (err) {
       console.error("Failed to delete entry", err);
-      toast.error("Failed to delete entry ❌");
+      toast.error("Failed to delete entry");
     }
   };
 
@@ -158,14 +158,6 @@ const handleSaveAll = async () => {
 
   return (
     <div className="p-5">
-      <button
-        onClick={addEntry}
-        className="mb-4 flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed rounded-md text-sm font-medium transition border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50"
-      >
-        <Plus size={16} />
-        Add Another Entry
-      </button>
-
       <div className="overflow-x-auto border rounded-lg shadow-sm bg-white">
         <table className="w-full border-collapse table-auto">
           <thead>
@@ -175,7 +167,7 @@ const handleSaveAll = async () => {
                 Transaction Date
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 min-w-[150px]">
-                New Barrels (Bbl)
+                No of Barrels (Bbl)
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 min-w-[150px]">
                 Tax Rate
@@ -264,14 +256,25 @@ const handleSaveAll = async () => {
                     ${calculateTotalTax()}
                   </span>
                 </td>
-                <td className="px-4 py-4 text-center">
-                  <button
+                <td className="px-4 py-4">
+                  <div className="flex items-center justify-center gap-3">
+                          <button
+        onClick={addEntry}
+        className="inline-flex items-center gap-2 px-4 py-2 border-2 border-dashed rounded-lg text-sm font-medium transition border-gray-400 text-gray-600 hover:border-gray-600 hover:bg-blue-50"
+      >
+        <Plus size={16} />
+        Add
+      </button>
+                      <button
                     onClick={handleSaveAll}
                     className="inline-flex items-center gap-2 px-6 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-all shadow-md active:scale-95"
                   >
                     <Save size={18} />
                     Save
                   </button>
+
+                  </div>
+                
                 </td>
               </tr>
             </tfoot>
