@@ -35,6 +35,13 @@ function CommunicationsTable({
 
         {/* Master Checkbox with Label */}
         <div className="flex items-center gap-3 p-3 rounded-lg">
+            <button
+          onClick={onAddEntry}
+          className="inline-flex items-center gap-2 px-4 py-2 border-2 border-dashed rounded-lg text-sm font-medium transition border-gray-400 text-gray-600 hover:border-gray-600 hover:bg-blue-50"
+        >
+          <Plus size={16} />
+          Add Another Entry
+        </button>
           <input 
             type="checkbox"
             checked={allChecked}
@@ -158,14 +165,6 @@ function CommunicationsTable({
                 </td>
                 <td className="px-4 py-4 text-center">
                   <div className="flex items-center justify-center gap-3">
- {/* Add Entry Button */}
-        <button
-          onClick={onAddEntry}
-          className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed rounded-md text-sm font-medium transition border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50"
-        >
-          <Plus size={16} />
-          Add
-        </button>
 
          <button
                     onClick={onSaveAll}

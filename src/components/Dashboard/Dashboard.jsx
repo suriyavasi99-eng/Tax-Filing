@@ -9,6 +9,7 @@ import Irs6627form53 from "../Tables/Part1/Irs-6627-53";
 import Irs6627Form16 from "../Tables/Part1/Irs-6627-16";
 import Irs6627form54 from "../Tables/Part1/Irs-6627-54";
 import Irs6627form98 from "../Tables/Part1/Irs-6627-98";
+import FuelTaxesTable from "../Tables/Part1/Fuel-Taxes";
 
 const Dashboard = () => {
   const { id: irsReturnId } = useParams();
@@ -326,6 +327,10 @@ const Dashboard = () => {
 
                 <Irs6627form98
                  activeItem={activeItem}
+                  irsReturnId={irsReturnId}/>
+
+                <FuelTaxesTable 
+                activeItem={activeItem}
                   irsReturnId={irsReturnId}/>
               </div>
             </div>

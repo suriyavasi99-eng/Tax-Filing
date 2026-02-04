@@ -201,13 +201,17 @@ const handleSaveAll = async () => {
   return (
     <div className="p-5">
       {/* Add Entry Button */}
-      <button
+      <div className="flex justify-end">
+             <button
         onClick={addEntry}
         className="mb-4 flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed rounded-md text-sm font-medium transition border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50"
       >
         <Plus size={16} />
         Add Another Entry
       </button>
+
+      </div>
+ 
 
       {/* Table */}
       <div className="overflow-x-auto border rounded-lg shadow-sm bg-white">

@@ -158,6 +158,15 @@ const handleSaveAll = async () => {
 
   return (
     <div className="p-5">
+       <div className="flex justify-end p-4 border-b bg-gray-50">
+        <button
+          onClick={addEntry}
+          className="inline-flex items-center gap-2 px-4 py-2 border-2 border-dashed rounded-lg text-sm font-medium transition border-gray-400 text-gray-600 hover:border-gray-600 hover:bg-blue-50"
+        >
+          <Plus size={16} />
+          Add Another Entry
+        </button>
+      </div>
       <div className="overflow-x-auto border rounded-lg shadow-sm bg-white">
         <table className="w-full border-collapse table-auto">
           <thead>
@@ -258,13 +267,7 @@ const handleSaveAll = async () => {
                 </td>
                 <td className="px-4 py-4">
                   <div className="flex items-center justify-center gap-3">
-                          <button
-        onClick={addEntry}
-        className="inline-flex items-center gap-2 px-4 py-2 border-2 border-dashed rounded-lg text-sm font-medium transition border-gray-400 text-gray-600 hover:border-gray-600 hover:bg-blue-50"
-      >
-        <Plus size={16} />
-        Add
-      </button>
+            
                       <button
                     onClick={handleSaveAll}
                     className="inline-flex items-center gap-2 px-6 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-all shadow-md active:scale-95"
